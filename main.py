@@ -42,4 +42,4 @@ async def on_ready():
 
     
 if __name__ == "__main__":
-    bot.run('MTE0OTE3NjU2OTM0OTI5MjEwMw.GGeI9u.mFYMbKr1CsR6cIon2eSmuq2QQV4_3zlwLTltMc')
+    bot.run('ghi token')
