@@ -3,6 +3,7 @@ from nextcord.ext import commands
 import json
 import os
 
+from cogs.config import *
 
 intents = nextcord.Intents().all()
 intents.typing = True
@@ -40,6 +41,6 @@ async def on_ready():
     # await bot.change_presence(status=nextcord.Status.dnd) #for do not disturb
     return
 
-    
+
 if __name__ == "__main__":
-    bot.run('ghi token')
+    bot.run(TOKEN)
