@@ -2,7 +2,7 @@ from nextcord.ext import commands
 import random
 import asyncio
 
-from cogs.g_def import *
+from cogs.g_def import connect_db, connect_main_db
 
 
 async def get_wallet(user_id):
@@ -51,7 +51,7 @@ async def get_amount(ctx, user_id, amount):
                     await ctx.send("Số tiền nhập không hợp lệ!")
                     return None
                 amount = int(amount)
-                if amount <= max_count and amount > 1:
+                if amount <= max_count and amount >= 1:
                     amount = int(min(amount, max_count))
                     if amount > wallet:
                         await ctx.send(f"Số tiền bạn nhập: **{amount}**<:cash:1151558754614116413> lớn hơn số dư trong wallet(**{wallet}**<:cash:1151558754614116413>).")
@@ -105,13 +105,13 @@ class GameBal(commands.Cog):
                 # Người chơi thắng
                 await update_wallet(user_id, amount)
                 await message.edit(f"**{display_name}** đã chọn **{'Ngửa' if side.lower() in ['u', 'up'] else 'Úp'}** và đặt cược **{amount}**<:cash:1151558754614116413>.\n"
-                        f"Đồng xu ra mặt **{'Ngửa<:CoinUp:1151819782937653258>' if coin_heads == 1 else 'Úp<:CoinDown:1151805929390616638>'}**, bạn đã thắng và nhận **{amount}**<:cash:1151558754614116413>.")
+                        f"Đồng xu ra mặt **{'Ngửa<:CoinUp:1151819782937653258>' if coin_heads == 1 else 'Úp<:CoinDown:1151805929390616638>'}**, bạn đã thắng và nhận **{amount}**<:cash:1151558754614116413><:emoji_:776386293579382784>\<:emoji_:776386293579382784>.")
             else:
                 # Người chơi thua
                 amount = -amount
                 await update_wallet(user_id, amount)
                 await message.edit(f"**{display_name}** đã chọn **{'Ngửa' if side.lower() in ['u', 'up'] else 'Úp'}** và đặt cược **{-amount}**<:cash:1151558754614116413>.\n"
-                        f"Đồng xu ra mặt **{'Ngửa<:CoinUp:1151819782937653258>' if coin_heads == 1 else 'Úp<:CoinDown:1151805929390616638>'}**, bạn đã thua và mất **{-amount}**<:cash:1151558754614116413>.")
+                        f"Đồng xu ra mặt **{'Ngửa<:CoinUp:1151819782937653258>' if coin_heads == 1 else 'Úp<:CoinDown:1151805929390616638>'}**, bạn đã thua và mất **{-amount}**<:cash:1151558754614116413><:chemat:776381339515093003><:chemat:776381339515093003>.")
 
     @commands.command(name="set", aliases=["s"])
     async def set(self, ctx, amount):

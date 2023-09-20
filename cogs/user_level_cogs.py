@@ -2,7 +2,7 @@ from nextcord.ext import commands
 import random
 import mysql.connector
 
-from cogs.g_def import *
+from cogs.g_def import connect_db, connect_main_db
 
 
 # Hàm tăng cấp người dùng

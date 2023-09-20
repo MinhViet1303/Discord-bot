@@ -1,7 +1,7 @@
 from nextcord.ext import commands
 import mysql.connector
 
-from cogs.g_def import *
+from cogs.g_def import connect_main_db, connect_db
 
 
 # Hàm tạo database "main" và bảng "user_data" nếu chưa tồn tại

@@ -1,7 +1,7 @@
 from nextcord.ext import commands
 import json
 
-from config import *
+from config import prefix_path
 
 class Prefix(commands.Cog):
     def __init__(self, bot):

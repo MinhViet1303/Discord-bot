@@ -1,11 +1,12 @@
 import nextcord
 import nextcord.ui
 from nextcord.ext import commands
+import random
 import datetime
 import pytz
 
-from cogs.g_def import *
-from cogs. gamebal_cogs import *
+from cogs.g_def import connect_db, connect_main_db
+from cogs. gamebal_cogs import update_wallet
 
 # Define một hàm để lấy thời gian reset_daily
 def get_reset_daily_time():
@@ -27,6 +28,22 @@ def get_reset_daily_time():
 class Utity(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+
+    @commands.command()
+    async def pick(self, ctx, *args):
+        
+        if not args:
+            await ctx.send("Vui lòng cung cấp ít nhất hai lựa chọn.")
+            return
+
+        choices_str = ' '.join(args)
+        choices_list = [choice.strip() for choice in choices_str.split(',')]
+
+        if len(choices_list) < 2:
+            await ctx.send("Vui lòng cung cấp ít nhất hai lựa chọn.")
+        else:
+            chosen_item = random.choice(choices_list)
+            await ctx.send(f"{chosen_item}")
 
     @commands.command()
     async def daily(self, ctx):
