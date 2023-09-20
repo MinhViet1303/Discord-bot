@@ -48,22 +48,22 @@ async def get_amount(ctx, user_id, amount):
             try:
                 # Kiểm tra xem amount có phải là số hay không
                 if not amount.isdigit():
-                    await ctx.send("Số tiền cược không hợp lệ!")
+                    await ctx.send("Số tiền nhập không hợp lệ!")
                     return None
                 amount = int(amount)
                 if amount <= max_count and amount > 1:
                     amount = int(min(amount, max_count))
                     if amount > wallet:
-                        await ctx.send(f"Số tiền cược(**{amount}**<:cash:1151558754614116413>) lớn hơn số dư trong wallet(**{wallet}**<:cash:1151558754614116413>).")
+                        await ctx.send(f"Số tiền bạn nhập: **{amount}**<:cash:1151558754614116413> lớn hơn số dư trong wallet(**{wallet}**<:cash:1151558754614116413>).")
                         return None
                 else:
-                    await ctx.send(f"Số tiền cược tối thiểu là 1<:cash:1151558754614116413> và tối đa không quá **{max_count}**<:cash:1151558754614116413>")
+                    await ctx.send(f"Số tiền nhập tối thiểu là 1<:cash:1151558754614116413> và tối đa không quá **{max_count}**<:cash:1151558754614116413>")
                     return None
             except ValueError:
                 await ctx.send("Lỗi ngoại lệ!")
                 return None
     else:
-        await ctx.send("Số tiền cược không hợp lệ!")
+        await ctx.send("Số tiền nhập không hợp lệ!")
         return None
 
     return amount

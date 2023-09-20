@@ -56,7 +56,7 @@ async def create_user_db(user_id, user_name):
         existing_user = main_cursor.fetchone()
 
         if existing_user is None:
-            # Nếu user_id chưa tồn tại trong userlist, ghi thông tin cần thiết vào userlist
+            # Nếu user_id chưa tồn tại trong user_data, ghi thông tin cần thiết vào userlist
             level = 0
             exp = 0
             exp_needed = 10
@@ -66,7 +66,7 @@ async def create_user_db(user_id, user_name):
             streak_daily = 0
 
             main_cursor.execute("""INSERT INTO user_data (db_user_id, db_user_name, db_exp, db_level, db_exp_need, db_wallet, db_bank, db_last_daily, db_streak_daily)
-                                VALUES (%s, %s, %s, %s, %s, %s, %s)""", (user_id, user_name, exp, level, exp_needed, wallet, bank, last_daily, streak_daily))
+                                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)""", (user_id, user_name, exp, level, exp_needed, wallet, bank, last_daily, streak_daily))
             main_connection.commit()
 
         # Tạo database mới bằng user_id

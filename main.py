@@ -3,16 +3,16 @@ from nextcord.ext import commands
 import json
 import os
 
-from cogs.config import *
+from config import *
 
 intents = nextcord.Intents().all()
 intents.typing = True
 bot = commands.Bot(command_prefix=['EP ',"!"], intents=intents)
 
-if not os.path.exists('prefix.json') or os.stat('prefix.json').st_size == 0:
-    with open('prefix.json', 'w') as f:
+if not os.path.exists(prefix_path) or os.stat(prefix_path).st_size == 0:
+    with open(prefix_path, 'w') as f:
         json.dump({'prefixes': ["EP ", "!"]}, f)
-with open('prefix.json', 'r') as f:
+with open(prefix_path, 'r') as f:
     try:
         prefixes = json.load(f)['prefixes']
     except json.JSONDecodeError:
@@ -21,7 +21,7 @@ with open('prefix.json', 'r') as f:
 bot.command_prefix = prefixes
 
 def load_cogs():
-    for filename in os.listdir('./cogs'):
+    for filename in os.listdir(cogs_path):
         if filename.endswith('cogs.py'):
             try:
                 bot.load_extension(f'cogs.{filename[:-3]}')

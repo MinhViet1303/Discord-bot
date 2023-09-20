@@ -1,8 +1,11 @@
+import nextcord
+import nextcord.ui
 from nextcord.ext import commands
 import datetime
 import pytz
 
 from cogs.g_def import *
+from cogs. gamebal_cogs import *
 
 # Define một hàm để lấy thời gian reset_daily
 def get_reset_daily_time():
@@ -20,7 +23,11 @@ def get_reset_daily_time():
     return now, reset_daily
 
 
+
 class Utity(commands.Cog):
+    def __init__(self, bot):
+        self.bot = bot
+
     @commands.command()
     async def daily(self, ctx):
         # Kiểm tra xem người dùng đã nhận daily chưa
@@ -65,6 +72,46 @@ class Utity(commands.Cog):
         else:
             # Nếu chưa đến lúc reset_daily, thông báo cho người dùng thời gian còn lại
             await ctx.send(f"Bạn đã nhận daily hôm nay và có thể nhận lại sau **{time_until_reset_hours} giờ {time_until_reset_minutes} phút**(12h hàng ngày).")
+
+    class Confirm_send(nextcord.ui.View):
+        def __init__(self, ctx, member, amount):
+            super().__init__()
+            self.value = None    
+            self.ctx = ctx
+            self.member = member
+            self.amount = amount
+            
+            self.user_display_name = self.ctx.author.nick if self.ctx.author.nick is not None else self.ctx.author.display_name
+            self.member_display_name = self.member.author.nick if self.member.author.nick is not None else self.member.author.display_name
+
+        @nextcord.ui.button(label= "Đồng ý✅", style=nextcord.ButtonStyle.green)
+        async def button1(self, button: nextcord.ui.button, interaction: nextcord.Integration):
+            await interaction.response.edit_message(content=f"{self.user_display_name} đã gửi **{self.amount}**<:cash:1151558754614116413> cho {self.member_display_name}")
+            await update_wallet(self.ctx.author.id, -int(self.amount))
+            await update_wallet(self.member.id, self.amount)
+
+        @nextcord.ui.button(label= "Từ chối❌", style=nextcord.ButtonStyle.red)
+        async def button2(self, button: nextcord.ui.button, interaction: nextcord.Integration):
+            await interaction.response.edit_message(content=f"Đã hủy!")
+
+    @commands.command()
+    async def send(self, ctx, member: nextcord.Member, amount):
+        user_id = ctx.author.id
+
+        # amount = await get_amount(ctx, user_id, amount)
+        view = self.Confirm_send(ctx, member, amount)
+        # Kiểm tra nếu người gửi là bot hoặc người gửi chính mình
+        if member.bot or member.id == user_id:
+            await ctx.send("Bạn không thể gửi tiền cho bot hoặc chính mình.")
+            return
+
+        await ctx.send(f"{ctx.author.mention}, bạn có chắc chắn muốn gửi {amount} tiền đến {member.mention}? Để xác nhận, hãy ấn ✅. Để hủy, hãy ấn ❌.", view = view)
+        await view.wait()
+
+
+
+
+
 
 def setup(bot):
     bot.add_cog(Utity(bot))
