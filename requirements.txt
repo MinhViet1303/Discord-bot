@@ -1,0 +1,5 @@
+# copy và chạy code dưới trên cmd, terminal
+# pip install -r requirements.txt
+
+nextcord
+mysql.connector
