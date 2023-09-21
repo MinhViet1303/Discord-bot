@@ -93,38 +93,46 @@ class Utity(commands.Cog):
             await ctx.send(f"Bạn đã nhận daily hôm nay và có thể nhận lại sau **{time_until_reset_hours} giờ {time_until_reset_minutes} phút**(12h hàng ngày).")
 
     class Confirm_send(nextcord.ui.View):
-        def __init__(self, ctx, member, amount):
+        def __init__(self, ctx, member, amount, user_display, member_display):
             super().__init__()
             self.value = None    
             self.ctx = ctx
             self.member = member
             self.amount = amount
             
-            self.user_display_name = self.ctx.author.nick if self.ctx.author.nick is not None else self.ctx.author.display_name
-            self.member_display_name = self.member.author.nick if self.member.author.nick is not None else self.member.author.display_name
+            self.user_display = user_display
+            self.member_display = member_display
 
         @nextcord.ui.button(label= "Đồng ý✅", style=nextcord.ButtonStyle.green)
         async def button1(self, button: nextcord.ui.button, interaction: nextcord.Integration):
-            await interaction.response.edit_message(content=f"{self.user_display_name} đã gửi **{self.amount}**<:cash:1151558754614116413> cho {self.member_display_name}")
+            await interaction.response.edit_message(content=f"**{self.user_display}** đã gửi **{self.amount}**<:cash:1151558754614116413> cho **{self.member_display}**")
             await update_wallet(self.ctx.author.id, -int(self.amount))
             await update_wallet(self.member.id, self.amount)
+            await interaction.edit(view=None)
 
         @nextcord.ui.button(label= "Từ chối❌", style=nextcord.ButtonStyle.red)
         async def button2(self, button: nextcord.ui.button, interaction: nextcord.Integration):
             await interaction.response.edit_message(content=f"Đã hủy!")
+            await interaction.edit(view=None)
 
     @commands.command()
-    async def send(self, ctx, member: nextcord.Member, amount):
+    async def send(self, ctx, member: nextcord.Member, amount, hiden = None):
         user_id = ctx.author.id
+        user_display = ctx.author.mention
+        member_display = member.mention
+
+        if hiden in ["hiden", "h"]:
+            user_display = ctx.author.nick if ctx.author.nick is not None else ctx.author.display_name
+            member_display = member.nick if member.nick is not None else member.display_name
 
         # amount = await get_amount(ctx, user_id, amount)
-        view = self.Confirm_send(ctx, member, amount)
+        view = self.Confirm_send(ctx, member, amount, user_display, member_display)
         # Kiểm tra nếu người gửi là bot hoặc người gửi chính mình
         if member.bot or member.id == user_id:
             await ctx.send("Bạn không thể gửi tiền cho bot hoặc chính mình.")
             return
 
-        await ctx.send(f"{ctx.author.mention}, bạn có chắc chắn muốn gửi {amount} tiền đến {member.mention}? Để xác nhận, hãy ấn ✅. Để hủy, hãy ấn ❌.", view = view)
+        await ctx.send(f"**{user_display}**, bạn có chắc chắn muốn gửi {amount} tiền đến **{member_display}**? Để xác nhận, hãy ấn ✅. Để hủy, hãy ấn ❌.", view = view)
         await view.wait()
 
 

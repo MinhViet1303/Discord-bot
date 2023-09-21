@@ -53,7 +53,7 @@ async def cogs(ctx, action, cog_name = None):
     
     elif action in ["load", "+"]:
         if cog_name1 not in bot.extensions:
-            await bot.load_extension(cog_name1)
+            bot.load_extension(cog_name1)
             await ctx.send(f'Loaded cog: **{cog_name2}**')
             print (f'Loaded cog: {cog_name2}.py')
         else:
@@ -61,7 +61,7 @@ async def cogs(ctx, action, cog_name = None):
     
     elif action in ["unload", "-"]:
         if cog_name1 in bot.extensions:
-            await bot.unload_extension(cog_name1)
+            bot.unload_extension(cog_name1)
             await ctx.send(f'Unloaded cog: **{cog_name2}**')
             print (f'Unloaded cog: {cog_name2}.py')
         else:
@@ -69,12 +69,12 @@ async def cogs(ctx, action, cog_name = None):
     
     elif action in ["reload", "r"]:
         if cog_name1 in bot.extensions:
-            await bot.unload_extension(cog_name1)
-            await bot.load_extension(cog_name1)
+            bot.unload_extension(cog_name1)
+            bot.load_extension(cog_name1)
             await ctx.send(f'Reload cog: **{cog_name2}**')
             print (f'Reload cog: {cog_name2}.py')
         else:
-            await bot.load_extension(cog_name1)
+            bot.load_extension(cog_name1)
             await ctx.send(f'Loaded cog: **{cog_name2}**')
             print (f'Loaded cog: {cog_name2}.py')
     
