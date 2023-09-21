@@ -1,16 +1,14 @@
 from nextcord.ext import commands
 import json
 
-from config import prefix_path
-
 class Prefix(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        with open(prefix_path, 'r') as f:
+        with open('prefix.json', 'r') as f:
             self.prefixes = json.load(f)['prefixes']
     
     def save_prefixes(self):
-        with open(prefix_path, 'w') as f:
+        with open('prefix.json', 'w') as f:
             json.dump({'prefixes': self.prefixes}, f)
         self.bot.command_prefix = self.prefixes
 

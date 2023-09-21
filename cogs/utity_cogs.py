@@ -8,6 +8,8 @@ import pytz
 from cogs.g_def import connect_db, connect_main_db
 from cogs. gamebal_cogs import update_wallet
 
+random.seed()
+
 # Define một hàm để lấy thời gian reset_daily
 def get_reset_daily_time():
     # Tạo múi giờ +7

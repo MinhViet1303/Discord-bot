@@ -4,6 +4,7 @@ import mysql.connector
 
 from cogs.g_def import connect_db, connect_main_db
 
+random.seed()
 
 # Hàm tăng cấp người dùng
 async def level_up(message, user_id):
