@@ -10,33 +10,44 @@ async def create_main_db():
     main_cursor = main_connection.cursor()
 
     try:
-        # Kiểm tra xem database "main" đã tồn tại hay chưa
-        main_cursor.execute("SHOW DATABASES")
-        existing_databases = [db[0] for db in main_cursor.fetchall()]
+        main_cursor.execute("CREATE DATABASE IF NOT EXISTS main")
+        main_connection.commit()
+        if main_cursor.rowcount > 0:
+            print("---- Đã tạo database 'main'")
 
-        if "main" not in existing_databases:
-            main_cursor.execute("CREATE DATABASE main")
-            main_connection.commit()
-            print("Đã tạo database 'main'")
+        main_cursor.execute("USE main")  # Chọn cơ sở dữ liệu "main" để tạo bảng
+        main_cursor.execute("SHOW TABLES")
+        existing_tables = [table[0] for table in main_cursor.fetchall()]
 
-            main_connection.database = "main"  # Chọn cơ sở dữ liệu "main" để tạo bảng "userlist"
-
-            # Tạo bảng "user_data" và các cột tương ứng
+        if "global_user_data" not in existing_tables:
             main_cursor.execute("""
-                CREATE TABLE IF NOT EXISTS user_data (
-                    db_user_id VARCHAR(255) PRIMARY KEY,
-                    db_user_name VARCHAR(255),
+                CREATE TABLE IF NOT EXISTS global_user_data (
+                    db_g_user_id VARCHAR(255) PRIMARY KEY,
+                    db_g_user_name VARCHAR(255),
                     db_exp FLOAT DEFAULT 0,
                     db_level INT DEFAULT 0,
                     db_exp_need FLOAT DEFAULT 0,
                     db_wallet FLOAT DEFAULT 0,
                     db_bank FLOAT DEFAULT 0,
                     db_last_daily DATETIME,
-                    db_streak INT DEFAULT 0
+                    db_streak_daily INT DEFAULT 0
                 )
             """)
             main_connection.commit()
-            print("Đã tạo bảng 'user_data'")
+            print("-- Đã tạo bảng 'user_data' cho database 'main'")
+        if "utity" not in existing_tables:
+            main_cursor.execute("""
+                CREATE TABLE IF NOT EXISTS utity (
+                    db_utity_id VARCHAR(255),
+                    db_utity_name VARCHAR(255) PRIMARY KEY,
+                    db_utity_value VARCHAR(255) DEFAULT NULL,
+                    db_utity_boolean TINYINT(1) DEFAULT 0
+                )
+            """)
+            
+            main_connection.commit()
+            print("-- Đã tạo bảng 'utity' cho database 'main'")
+        
     except mysql.connector.Error as err:
         print(f"Lỗi: {err}")
     finally:
@@ -51,8 +62,8 @@ async def create_user_db(user_id, user_name):
     main_cursor = main_connection.cursor()
 
     try:
-        # Kiểm tra xem user_id đã tồn tại trong db_user_id hay chưa
-        main_cursor.execute('SELECT db_user_id FROM user_data WHERE db_user_id = %s', (user_id,))
+        # Kiểm tra xem user_id đã tồn tại trong db_g_user_id hay chưa
+        main_cursor.execute('SELECT db_g_user_id FROM global_user_data WHERE db_g_user_id = %s', (user_id,))
         existing_user = main_cursor.fetchone()
 
         if existing_user is None:
@@ -65,7 +76,7 @@ async def create_user_db(user_id, user_name):
             last_daily = None
             streak_daily = 0
 
-            main_cursor.execute("""INSERT INTO user_data (db_user_id, db_user_name, db_exp, db_level, db_exp_need, db_wallet, db_bank, db_last_daily, db_streak_daily)
+            main_cursor.execute("""INSERT INTO global_user_data (db_g_user_id, db_g_user_name, db_exp, db_level, db_exp_need, db_wallet, db_bank, db_last_daily, db_streak_daily)
                                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)""", (user_id, user_name, exp, level, exp_needed, wallet, bank, last_daily, streak_daily))
             main_connection.commit()
 
@@ -75,22 +86,41 @@ async def create_user_db(user_id, user_name):
         main_connection.commit()
         # Kiểm tra kết quả của câu lệnh CREATE DATABASE
         if main_cursor.rowcount > 0:
-            print(f"Đã tạo database '{db_name}'")
+            print(f"---- Đã tạo database '{db_name}'")
 
         user_connection = await connect_db(db_name)
         user_cursor = user_connection.cursor()
-        user_cursor.execute("""
-            CREATE TABLE IF NOT EXISTS inventory (
-                db_item_id VARCHAR(255) PRIMARY KEY,
-                db_item_number INT
-            )
-        """)
-        user_connection.commit()
-        user_cursor.close()
-        user_connection.close()
+        
+        user_cursor.execute("SHOW TABLES")
+        existing_tables = [table[0] for table in user_cursor.fetchall()]
+        
+        if "inventory" not in existing_tables:
+            user_cursor.execute("""
+                CREATE TABLE IF NOT EXISTS inventory (
+                    db_item_id VARCHAR(255) PRIMARY KEY,
+                    db_item_number INT
+                )
+            """)
+            user_connection.commit()
+            print (f"-- Đã tảo bảng 'inventory' cho database {db_name}")
+        
+        if "user_data" not in existing_tables:
+            user_cursor.execute("""
+                CREATE TABLE IF NOT EXISTS user_data (
+                    db_user_id VARCHAR(255) PRIMARY KEY,
+                    db_user_name VARCHAR(255)
+                )
+            """)
+            user_cursor.execute("""INSERT IGNORE INTO user_data (db_user_id, db_user_name) VALUES (%s, %s)""", (user_id, user_name))
+            user_connection.commit()
+            print (f"-- Đã tảo bảng 'user_data' cho database {db_name}")
+        
     except mysql.connector.Error as err:
         print(f"Lỗi: {err}")
     finally:
+        if user_connection:
+            user_cursor.close()
+            user_connection.close()
         if main_connection:
             main_cursor.close()
             main_connection.close()

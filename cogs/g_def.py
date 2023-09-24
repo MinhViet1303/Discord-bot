@@ -1,6 +1,10 @@
 import mysql.connector
 import nextcord
 from nextcord.ext import commands
+import json
+import os
+
+from config import password
 
 intents = nextcord.Intents().all()
 intents.typing = True
@@ -12,7 +16,7 @@ async def connect_db(db_name=None):
         conn = await bot.loop.run_in_executor(None, lambda: mysql.connector.connect(
             host="localhost",
             user="root",
-            password="Baka@529886",
+            password=password,
             port=1300,
             database=db_name
         ))
@@ -29,7 +33,7 @@ async def connect_main_db():
         conn = await bot.loop.run_in_executor(None, lambda: mysql.connector.connect(
             host="localhost",
             user="root",
-            password="Baka@529886",
+            password=password,
             port=1300,
             database="main"
         ))

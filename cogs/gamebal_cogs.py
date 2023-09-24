@@ -9,7 +9,7 @@ async def get_wallet(user_id):
     main_connection = await connect_main_db()
     
     main_cursor = main_connection.cursor()
-    main_cursor.execute("SELECT db_wallet FROM user_data WHERE db_user_id = %s", (user_id,))
+    main_cursor.execute("SELECT db_wallet FROM global_user_data WHERE db_g_user_id = %s", (user_id,))
     result = main_cursor.fetchall()
     
     if main_connection:
@@ -25,7 +25,7 @@ async def update_wallet(user_id, amount):
     main_connection = await connect_main_db()
 
     main_cursor = main_connection.cursor()
-    main_cursor.execute("UPDATE user_data SET db_wallet = db_wallet + %s WHERE db_user_id = %s", (amount, user_id))
+    main_cursor.execute("UPDATE global_global_user_data SET db_wallet = db_wallet + %s WHERE db_g_user_id = %s", (amount, user_id))
     main_connection.commit()
 
     if main_connection:
@@ -120,7 +120,7 @@ class GameBal(commands.Cog):
         main_connection = await connect_main_db()
         
         main_cursor = main_connection.cursor()
-        main_cursor.execute("UPDATE user_data SET db_wallet = %s WHERE db_user_id = %s", (amount, user_id))
+        main_cursor.execute("UPDATE global_global_user_data SET db_wallet = %s WHERE db_g_user_id = %s", (amount, user_id))
         main_connection.commit()
         
         await ctx.send(f"Số tiền được set thành {amount}")
