@@ -3,3 +3,4 @@
 
 nextcord
 mysql.connector
+pygetwindow

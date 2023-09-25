@@ -1,14 +1,16 @@
 from nextcord.ext import commands
 import subprocess
+import asyncio
+import pygetwindow as gw
 
 from cogs.g_def import connect_main_db
 
 
-async def load_is_restart(value = None):
+async def load_is_restart(value = None or bool):
     main_connection = await connect_main_db()  # Kết nối đến máy chủ MySQL mà không chọn cơ sở dữ liệu cụ thể
     main_cursor = main_connection.cursor()
 
-    if value is None:
+    if value is None or value != True:
         main_cursor.execute("SELECT db_utity_boolean FROM utity WHERE db_utity_name = 'is_restart'")
         result = main_cursor.fetchone()
         if result is None:
@@ -30,16 +32,27 @@ class Admin_CMD(commands.Cog):
 
     @commands.command(name="restart", aliases = ["rs"])
     @commands.is_owner() 
-    async def restart(self, ctx):
-        
+    async def restart(self, ctx, action = None):
         await ctx.send("Bot đang khởi động lại...")
+        print("===========================")
         print("Bot đang khởi động lại...")
         
         # Đặt biến trạng thái là True trước khi khởi động lại
         await load_is_restart(True)
         
-        # Khởi động lại bot bằng cách chạy lại chương trình Python
-        subprocess.Popen(["python", "-Xfrozen_modules=off", "main.py"])
+        if action is None:
+            # Khởi động lại bot bằng cách chạy lại chương trình Python
+            subprocess.Popen(["python", "-Xfrozen_modules=off", "main.py"]).wait()
+        
+        elif action in ["clear", "cl", "c"]:
+            self.bot.clear()
+            subprocess.Popen(["start", "auto_boots_discord_bot.bat.lnk"], shell=True)
+            
+            await asyncio.sleep(3)
+            
+            cmd_window = gw.getWindowsWithTitle("auto_boots_discord_bot.bat")[1] 
+            if cmd_window:
+                cmd_window.close()
 
 def setup(bot):
     bot.add_cog(Admin_CMD(bot))

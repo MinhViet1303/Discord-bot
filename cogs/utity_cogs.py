@@ -3,28 +3,12 @@ import nextcord.ui
 from nextcord.ext import commands
 import random
 import datetime
-import pytz
 import os
 
-from cogs.g_def import connect_db, connect_main_db
-from cogs. gamebal_cogs import update_wallet
+from cogs.g_def import connect_db, connect_main_db, get_reset_daily_time
+from cogs.gamebal_cogs import update_wallet
 
 random.seed()
-
-# Define một hàm để lấy thời gian reset_daily
-def get_reset_daily_time():
-    # Tạo múi giờ +7
-    tz = pytz.timezone('Asia/Ho_Chi_Minh')  # Điều chỉnh múi giờ tùy theo vị trí của bạn
-    
-    # Lấy thời gian hiện tại và đặt giờ thành 12:00 trưa
-    now = datetime.datetime.now(tz)
-    reset_daily = now.replace(hour=12, minute=0, second=0, microsecond=0)
-    
-    # Nếu thời gian hiện tại đã vượt qua thời gian reset_daily, thì cộng thêm 1 ngày
-    if now >= reset_daily:
-        reset_daily += datetime.timedelta(days=1)
-    
-    return now, reset_daily
 
 #auto load cogs
 async def auto_load_cogs(bot, ctx = None, action = None):
@@ -107,7 +91,7 @@ class Utity(commands.Cog):
         result = main_cursor.fetchone()
 
         # Lấy thời gian reset_daily
-        now, reset_daily = get_reset_daily_time() 
+        now, reset_daily = await get_reset_daily_time() 
         time_until_reset_seconds = int((reset_daily - now).total_seconds())
         time_until_reset_hours = time_until_reset_seconds // 3600
         time_until_reset_minutes = (time_until_reset_seconds % 3600) // 60
