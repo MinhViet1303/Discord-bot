@@ -14,13 +14,15 @@ async def load_luck(user_id):
         main_cursor.execute("SELECT db_luck, db_temp_luck FROM global_user_data WHERE db_g_user_id = %s", (user_id,))
         result = main_cursor.fetchone()
         
-        if result is None:
-            main_cursor.execute("INSERT INTO global_user_data (db_luck, db_temp_luck) VALUES (%s, %s)", (0, 0))
-            main_connection.commit()
-            luck, temp_luck = 0
-        else:
-            luck, temp_luck = result
+        luck, temp_luck = result
         
+        if luck is None or temp_luck is None:
+            luck = 0 if luck is None else luck
+            temp_luck = 0 if temp_luck is None else temp_luck
+            
+        main_cursor.execute("UPDATE global_user_data SET db_luck = %s, db_temp_luck = %s WHERE db_g_user_id = %s", (luck, temp_luck, user_id))
+        main_connection.commit()
+                
         return luck, temp_luck
     
     finally:
