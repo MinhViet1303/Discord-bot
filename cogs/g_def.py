@@ -60,3 +60,16 @@ async def connect_main_db():
     except mysql.connector.Error as err:
         print(f"Lỗi khi kết nối đến database: {err}")
         return None
+
+async def load_data(table, where, where_value, select):
+    main_connection = await connect_main_db()
+    main_cursor = main_connection.cursor()
+    try:
+        main_cursor.execute(f"SELECT {', '.join(select)} FROM {table} WHERE {where} = {where_value}")
+        result = main_cursor.fetchone()
+        
+        return result
+    finally:
+        if main_connection:
+            main_cursor.close()
+            main_connection.close()

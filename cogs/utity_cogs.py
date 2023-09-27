@@ -2,10 +2,9 @@ import nextcord
 import nextcord.ui
 from nextcord.ext import commands
 import random
-import datetime
 import os
 
-from cogs.g_def import connect_db, connect_main_db, get_reset_daily_time
+from cogs.g_def import connect_db, connect_main_db
 from cogs.gamebal_cogs import update_wallet
 
 random.seed()
@@ -78,51 +77,6 @@ class Utity(commands.Cog):
             chosen_item = random.choice(choices_list)
             await ctx.send(f"{chosen_item}")
 
-    @commands.command()
-    async def daily(self, ctx):
-        # Kiểm tra xem người dùng đã nhận daily chưa
-        user_id = ctx.author.id
-        display_name = ctx.author.nick if ctx.author.nick is not None else ctx.author.display_name
-
-        main_connection = await connect_main_db() 
-        main_cursor = main_connection.cursor()
-
-        main_cursor.execute("SELECT db_level, db_last_daily, db_streak_daily FROM global_user_data WHERE db_g_user_id = %s", (user_id,))
-        result = main_cursor.fetchone()
-
-        # Lấy thời gian reset_daily
-        now, reset_daily = await get_reset_daily_time() 
-        time_until_reset_seconds = int((reset_daily - now).total_seconds())
-        time_until_reset_hours = time_until_reset_seconds // 3600
-        time_until_reset_minutes = (time_until_reset_seconds % 3600) // 60
-        level, last_daily, streak = result
-
-        if last_daily is None or now >= reset_daily:
-            if last_daily is None or (now - last_daily <= datetime.timedelta(days=1)):
-                # Nếu last_daily là None hoặc khoảng thời gian từ lần cuối dùng lệnh ngắn hơn hoặc bằng 1 ngày, cập nhật thời gian và tăng streak
-                streak += 1
-            else:
-                # Nếu lớn hơn một ngày từ lần cuối nhận, reset streak về 0
-                streak = 0
-            
-            streak_bonus = 0.05 * streak
-            if level < 10:
-                x = level * 100
-                reward = x + (streak_bonus * x)
-            else:
-                x = level * (100 * (level // 10))
-                reward = x + (streak_bonus * x)
-            
-            main_cursor.execute("UPDATE global_user_data SET db_last_daily = NOW(), db_wallet = %s, db_streak_daily = %s WHERE db_g_user_id = %s", (reward, streak, user_id))
-            main_connection.commit()
-            await ctx.send(f"**{display_name}**, Bạn đã nhận được **{int(reward)}**<:cash:1151558754614116413> quà hàng ngày! \n"
-                        f"Chuỗi streak của bạn hiện tại là **{streak} ngày**! \n"
-                        f"Bonus streak hiện tại của bạn là **{round(streak_bonus*100)}%**! \n"  
-                        f"Lần daily kế tiếp là **{time_until_reset_hours} giờ {time_until_reset_minutes} phút** sau(12h hàng ngày).")
-        else:
-            # Nếu chưa đến lúc reset_daily, thông báo cho người dùng thời gian còn lại
-            await ctx.send(f"Bạn đã nhận daily hôm nay và có thể nhận lại sau **{time_until_reset_hours} giờ {time_until_reset_minutes} phút**(12h hàng ngày).")
-
     class Confirm_send(nextcord.ui.View):
         def __init__(self, ctx, member, amount, user_display, member_display):
             super().__init__()
@@ -183,7 +137,7 @@ class Utity(commands.Cog):
             await auto_load_cogs(self.bot, ctx, action)
         
         elif action in ["load", "+", "l"]:
-            if cog_name1 not in self.self.bot.extensions:
+            if cog_name1 not in self.bot.extensions:
                 self.bot.load_extension(cog_name1)
                 await ctx.send(f'Loaded cog: **{cog_name2}**')
                 print (f'Loaded cog: {cog_name2}.py')

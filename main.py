@@ -40,6 +40,6 @@ async def on_ready():
 @bot.event
 async def on_disconnect():
     print(f"Bot disconnected. Reconnecting...[{date.datetime.now().strftime('%d/%m/%Y %H:%M:%S')}]")
-    print("=====================================================")
+    print("======================================================")
 if __name__ == "__main__":
     bot.run(TOKEN)

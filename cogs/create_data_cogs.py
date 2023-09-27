@@ -28,13 +28,13 @@ async def create_main_db():
                     db_luck INT DEFAULT 0,                    
                     db_temp_luck INT DEFAULT 0,                    
                     db_exp FLOAT DEFAULT 0,
-                    db_level INT DEFAULT 0,
+                    db_user_level INT DEFAULT 0,
                     db_exp_need FLOAT DEFAULT 0,
                     db_wallet FLOAT DEFAULT 0,
                     db_bank FLOAT DEFAULT 0,
                     db_last_daily DATETIME DEFAULT None,
-                    db_last_random_luck DATETIME DEFAULT None,
-                    db_last_random_temp_luck DATETIME DEFAULT None,
+                    db_last_rd_luck DATETIME DEFAULT None,
+                    db_last_rd_temp_luck DATETIME DEFAULT None,
                     db_streak_daily INT DEFAULT 0
                 )
             """)
@@ -85,7 +85,7 @@ async def create_user_db(user_id, user_name):
             last_temp_luck = None
             streak_daily = 0
 
-            main_cursor.execute("""INSERT INTO global_user_data (db_g_user_id, db_g_user_name, db_luck, db_temp_luck, db_exp, db_level, db_exp_need, db_wallet, db_bank, db_last_daily, db_last_random_luck, db_last_random_temp_luck, db_streak_daily)
+            main_cursor.execute("""INSERT INTO global_user_data (db_g_user_id, db_g_user_name, db_luck, db_temp_luck, db_exp, db_user_level, db_exp_need, db_wallet, db_bank, db_last_daily, db_last_rd_luck, db_last_rd_temp_luck, db_streak_daily)
                                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""", (user_id, user_name, luck, temp_luck, exp, level, exp_needed, wallet, bank, last_daily, last_luck, last_temp_luck, streak_daily))
             main_connection.commit()
 

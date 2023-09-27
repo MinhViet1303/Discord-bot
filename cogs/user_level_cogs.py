@@ -12,7 +12,7 @@ async def level_up(message, user_id):
     main_cursor = main_connection.cursor()
 
     try:
-        main_cursor.execute('SELECT db_exp, db_level, db_exp_need, db_wallet FROM global_user_data WHERE db_g_user_id = %s', (user_id,))
+        main_cursor.execute('SELECT db_exp, db_user_level, db_exp_need, db_wallet FROM global_user_data WHERE db_g_user_id = %s', (user_id,))
         user_data = main_cursor.fetchone()
 
         if user_data:
@@ -57,7 +57,7 @@ async def level_up(message, user_id):
                 if message.channel.id != 879185402404143144:
                     await message.channel.send(f"Chúc mừng, {message.author.mention}! Bạn vừa lên cấp {level} và được thưởng `{reward} Cash`!")
 
-            main_cursor.execute('UPDATE global_user_data SET db_exp = %s, db_level = %s, db_exp_need = %s, db_wallet = db_wallet + %s WHERE db_g_user_id = %s', (exp, level, exp_needed, reward, user_id))
+            main_cursor.execute('UPDATE global_user_data SET db_exp = %s, db_user_level = %s, db_exp_need = %s, db_wallet = db_wallet + %s WHERE db_g_user_id = %s', (exp, level, exp_needed, reward, user_id))
             main_connection.commit()
     except mysql.connector.Error as err:
         print(f"Lỗi: {err}")
