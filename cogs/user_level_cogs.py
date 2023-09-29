@@ -73,7 +73,7 @@ async def calculate_exp(lv, luck, temp_luck, exp_need):
     
     exp = ((raw * x) * buff) + bonus
     
-    limit_max = exp_need * 0.025
+    limit_max = exp_need * 0.05
     limit_min = exp_need * 0.01
     
     # Số lần kiểm tra tối đa
@@ -144,15 +144,19 @@ async def level_up(message, user_id):
                 reward = round(reward,2)
             wallet += reward
             
-            if message.channel.id != 879185402404143144:
-                await message.channel.send(f"Xin chào **{display_name}**, chúc mừng bạn đã lên level, level hiện tại của bạn là **{lv}**! \n"
-                            f"Daily luck hôm nay của bạn là **{temp_luck}**\n"
-                            f"Luck của bạn là **{luck}** \n"
-                            f"\n"
-                            f"Quà cơ bản của bạn là **{raw_reward}**<:cash:1151558754614116413> \n"
-                            f"Bonus luck của bạn là **{round(bonus*100)}%**, bạn {'không nhận được bonus' if luck_bonus == 0 else '**nhận thêm**' if luck_bonus > 0 else '**mất**'} **{round(reward_bonus)}**<:cash:1151558754614116413> \n"
-                            f"Tổng cộng bạn nhận được **{reward}**<:cash:1151558754614116413> quà lên cấp! \n")
+            old_lv = lv - 1
             
+            print(f"User {display_name} lv up{old_lv} => {lv}, nhận thưởng {reward}cash!")
+            
+            # if message.channel.id != 879185402404143144:
+            await message.channel.send(f"Xin chào **{display_name}**, chúc mừng bạn đã lên level, level hiện tại của bạn là **{lv}**! \n"
+                        f"Daily luck hôm nay của bạn là **{temp_luck}**\n"
+                        f"Luck của bạn là **{luck}** \n"
+                        f"\n"
+                        f"Quà cơ bản của bạn là **{raw_reward}**<:cash:1151558754614116413> \n"
+                        f"Bonus luck của bạn là **{round(bonus*100)}%**, bạn {'không nhận được bonus' if luck_bonus == 0 else '**nhận thêm**' if luck_bonus > 0 else '**mất**'} **{round(reward_bonus)}**<:cash:1151558754614116413> \n"
+                        f"Tổng cộng bạn nhận được **{reward}**<:cash:1151558754614116413> quà lên cấp! \n")
+        
         main_cursor.execute('UPDATE global_user_data SET db_exp = %s, db_exp_need = %s, db_user_level = %s, db_wallet = %s WHERE db_g_user_id = %s', (exp, exp_need, lv, wallet, user_id))
         main_connection.commit()
     except mysql.connector.Error as err:
@@ -167,6 +171,30 @@ class User_Levelling(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
+    @commands.command(name = "level", aliases = ["lv"])
+    async def level(self, ctx):
+        user_id =  ctx.author.id
+        main_connection = await connect_main_db()
+        main_cursor = main_connection.cursor()
+        
+        main_cursor.execute('SELECT db_exp, db_user_level, db_exp_need FROM global_user_data WHERE db_g_user_id = %s', (user_id,))
+        user_data = main_cursor.fetchone()
+        
+        exp = round(user_data[0])
+        lv = user_data[1]
+        exp_need = round(user_data[2])
+        
+        await ctx.send(f"Level hiện tại của bạn là **{lv}**! \n"
+                        f"======================= \n"
+                        f"Exp/Exp_need: \n"
+                        f"**{exp}/{exp_need}({round((exp/exp_need)*100)}%)**")
+        
+        if main_connection:
+            main_cursor.close()
+            main_connection.close()
+
+
+    
     @commands.Cog.listener()
     async def on_message(self, message):
         if message.author.bot:

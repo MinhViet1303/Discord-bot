@@ -27,7 +27,7 @@ async def update_wallet(user_id, amount):
     main_connection = await connect_main_db()
 
     main_cursor = main_connection.cursor()
-    main_cursor.execute("UPDATE global_global_user_data SET db_wallet = db_wallet + %s WHERE db_g_user_id = %s", (amount, user_id))
+    main_cursor.execute("UPDATE global_user_data SET db_wallet = db_wallet + %s WHERE db_g_user_id = %s", (amount, user_id))
     main_connection.commit()
 
     if main_connection:
@@ -109,7 +109,7 @@ class GameBal(commands.Cog):
                 # Người chơi thắng
                 await update_wallet(user_id, amount)
                 await message.edit(f"**{display_name}** đã chọn **{'Ngửa' if side.lower() in ['u', 'up'] else 'Úp'}** và đặt cược **{amount}**<:cash:1151558754614116413>.\n"
-                        f"Đồng xu ra mặt **{'Ngửa<:CoinUp:1151819782937653258>' if coin_heads == 1 else 'Úp<:CoinDown:1151805929390616638>'}**, bạn đã thắng và nhận **{amount}**<:cash:1151558754614116413><:emoji_:776386293579382784>\<:emoji_:776386293579382784>.")
+                        f"Đồng xu ra mặt **{'Ngửa<:CoinUp:1151819782937653258>' if coin_heads == 1 else 'Úp<:CoinDown:1151805929390616638>'}**, bạn đã thắng và nhận **{amount}**<:cash:1151558754614116413><:emoji_:776386293579382784><:emoji_:776386293579382784>.")
             else:
                 # Người chơi thua
                 amount = -amount

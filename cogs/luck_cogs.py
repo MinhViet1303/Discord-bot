@@ -188,7 +188,9 @@ class Luck(commands.Cog):
             luck_bonus = round(luck * 0.01, 2) 
             streak_bonus = round(streak * 0.05, 1) #5% trên mỗi streak
             
-            if level < 10:
+            if level == 0:
+                x = (level + 1) * 100
+            elif level < 10:
                 x = level * 100
             else:
                 x = level * (100 * round(level / 10, 1))
