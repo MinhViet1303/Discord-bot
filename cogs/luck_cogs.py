@@ -31,7 +31,7 @@ async def load_luck(user_id):
             main_connection.close()
 
 
-async def random_luck(user_id, factor, select = [-1, 0,1,2]):
+async def random_luck(user_id, factor, select = [-2, -1, 0 ,1 ,2]):
     main_connection = await connect_main_db() 
     main_cursor = main_connection.cursor()
     try:
@@ -44,15 +44,17 @@ async def random_luck(user_id, factor, select = [-1, 0,1,2]):
         if lv == 0:
             lv_range = 1
         elif lv <= 10:
-            lv_range = lv*2
-        elif lv <= 20:
             lv_range = lv*1.5
+        elif lv <= 20:
+            lv_range = lv*1.3
         elif lv <= 25:
-            lv_range = lv*1.2
+            lv_range = lv*1.15
         else:
             lv_range = lv
         
         if select == -1:
+            luck = 0
+        if select == -2:
             temp_luck = 0
         
         def calculate_luck_range(value):
@@ -61,30 +63,62 @@ async def random_luck(user_id, factor, select = [-1, 0,1,2]):
                 return value
             elif abs_value < 10:
                 return value / 2
+            elif abs_value < 25:            
+                return value / 5
             else:
                 return value / 10
         
         def random_round(value):
             return round(random.uniform(-abs(value), abs(value)), 1)
         
-        luck_range = calculate_luck_range(luck)
-        temp_luck_range = calculate_luck_range(temp_luck)
+        luck_range = calculate_luck_range(luck/2)
+        temp_luck_range = calculate_luck_range(temp_luck/2)
         
         rd_lv_range = random_round(lv_range)
         rd_luck_range = random_round(luck_range)
         rd_temp_luck_range = random_round(temp_luck_range)
         
-        luck_range = rd_lv_range + rd_luck_range + rd_temp_luck_range       
+        rd_range = rd_lv_range + rd_luck_range + rd_temp_luck_range       
         
-        rd_luck = factor * random_round(luck_range)
-        rd_temp_luck = temp_luck = factor * random_round(luck_range)
+        rd_luck = factor * rd_range
+        rd_temp_luck = factor * rd_range
+        
+        limit_range = (lv * factor) + (luck / 10)
+        
+        max_attempts = 10
+        attempts = 0
+        
+        x = random.uniform(0.5,1.5)
+        
+        while (abs(rd_luck) > limit_range) and attempts < max_attempts:
+            rd_luck = factor * rd_range
+            print("er1")
+            attempts += 1
+            
+        if abs(rd_luck) > limit_range:
+            rd_luck = factor * rd_range * x
+        
+        attempts = 0
+        
+        while abs(rd_temp_luck) > limit_range and attempts < max_attempts:
+            rd_temp_luck = factor * rd_range
+            print("er2")
+            attempts += 1
+            
+        if abs(rd_temp_luck) > limit_range:
+            rd_temp_luck = factor * rd_range * x
+        
+        
+        if lv <= 10 or abs(rd_luck) <= 5:
+            if rd_luck <= 5:
+                rd_luck = abs(rd_luck)
         
         if select == 0:
             luck += rd_luck
             temp_luck += rd_temp_luck
-        elif select == 1:
+        elif select in [1, -1]:
             luck += rd_luck
-        elif select == 2 or -1:
+        elif select in [2, -2]:
             temp_luck += rd_temp_luck
         
         main_cursor.execute("UPDATE global_user_data SET db_luck = %s, db_temp_luck = %s WHERE db_g_user_id = %s", (luck, temp_luck, user_id))
@@ -99,6 +133,23 @@ async def random_luck(user_id, factor, select = [-1, 0,1,2]):
 class Luck(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+
+
+    @commands.command()
+    async def test_luck(self, ctx):
+        user_id = ctx.author.id
+        await random_luck(user_id, 1, 1) #random luck
+        await random_luck(user_id, 1, -2) #reset và random daily luck
+        luck, temp_luck = await load_luck(user_id) #load luck mới random
+        await ctx.send(f"Luck: {luck}, Temp Luck: {temp_luck}")
+    
+    @commands.command()
+    async def reset_luck(self, ctx):
+        user_id = ctx.author.id
+        await random_luck(user_id, 0, -1) #random luck
+        await random_luck(user_id, 0, -2) #reset và random daily luck
+        luck, temp_luck = await load_luck(user_id) #load luck mới random
+        await ctx.send(f"Luck: {luck}, Temp Luck: {temp_luck}")
 
 
     @commands.command()
@@ -133,9 +184,9 @@ class Luck(commands.Cog):
             await random_luck(user_id, 2, -1) #reset và random daily luck
             luck, temp_luck = await load_luck(user_id) #load luck mới random
             
+            temp_luck_bonus = round(temp_luck * 0.01, 2)
+            luck_bonus = round(luck * 0.01, 2) 
             streak_bonus = round(streak * 0.05, 1) #5% trên mỗi streak
-            luck_bonus = round(luck * 0.01, 1) 
-            temp_luck_bonus = round(temp_luck * 0.01, 1)
             
             if level < 10:
                 x = level * 100
@@ -145,14 +196,15 @@ class Luck(commands.Cog):
             formula = x + (streak_bonus * x) + ((luck_bonus * x) + (temp_luck_bonus * x))
             
             raw_reward = round(x,1)
-            reward_streak_bonus = round(streak_bonus * x, 1)
-            reward_luck_bonus = round(luck_bonus * x, 1)
             reward_temp_luck_bonus = round(temp_luck_bonus * x, 1)
+            reward_luck_bonus = round(luck_bonus * x, 1)
+            reward_streak_bonus = round(streak_bonus * x)
             
             reward = round(formula)
             
             main_cursor.execute("UPDATE global_user_data SET db_last_daily = NOW(), db_wallet = %s, db_streak_daily = %s WHERE db_g_user_id = %s", (reward, streak, user_id))
             main_connection.commit()
+            
             
             await ctx.send(f"Xin chào **{display_name}**, Bạn đã dùng daily của hôm nay! \n"
                         f"Daily luck hôm nay của bạn là **{temp_luck}**\n"
@@ -160,8 +212,8 @@ class Luck(commands.Cog):
                         f"Chuỗi streak của bạn hiện tại là **{streak} ngày**! \n"
                         f"\n"
                         f"Quà cơ bản của bạn là **{raw_reward}**<:cash:1151558754614116413> \n"
-                        f"Bonus daily luck của bạn là **{round(temp_luck_bonus*100)}%**, bạn được nhận thêm **{reward_temp_luck_bonus}**<:cash:1151558754614116413> \n"
-                        f"Bonus luck của bạn là **{round(luck_bonus*100)}%**, bạn được nhận thêm **{reward_luck_bonus}**<:cash:1151558754614116413> \n"
+                        f"Bonus daily luck của bạn là **{round(temp_luck_bonus*100)}%**, bạn {'không nhận được bonus' if temp_luck_bonus == 0 else '**nhận thêm**' if temp_luck_bonus > 0 else '**mất**'} **{round(reward_temp_luck_bonus)}**<:cash:1151558754614116413> \n"
+                        f"Bonus luck của bạn là **{round(luck_bonus*100)}%**, bạn {'không nhận được bonus' if luck_bonus == 0 else '**nhận thêm**' if luck_bonus > 0 else '**mất**'} **{round(reward_luck_bonus)}**<:cash:1151558754614116413> \n"
                         f"Bonus streak hiện tại của bạn là **{round(streak_bonus*100)}%**, bạn được nhận thêm **{reward_streak_bonus}**<:cash:1151558754614116413>  \n" 
                         f"Tổng cộng bạn nhận được **{reward}**<:cash:1151558754614116413> quà hàng ngày! \n"
                         f"\n"

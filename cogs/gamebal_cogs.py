@@ -2,24 +2,26 @@ from nextcord.ext import commands
 import random
 import asyncio
 
-from cogs.g_def import connect_db, connect_main_db
-
+from cogs.g_def import connect_db, connect_main_db, format_money
 
 async def get_wallet(user_id):
     main_connection = await connect_main_db()
     
     main_cursor = main_connection.cursor()
     main_cursor.execute("SELECT db_wallet FROM global_user_data WHERE db_g_user_id = %s", (user_id,))
-    result = main_cursor.fetchall()
+    result = main_cursor.fetchone()
     
     if main_connection:
         main_cursor.close()
         main_connection.close()
     
-    if result != None:
-        return int(result[0][0])
+    
+    if result is not None:
+        wallet = result[0]
+        if wallet.is_integer():
+            wallet = int(wallet)
+        return wallet
     return 0
-
 
 async def update_wallet(user_id, amount):
     main_connection = await connect_main_db()
@@ -71,13 +73,15 @@ async def get_amount(ctx, user_id, amount):
 
 class GameBal(commands.Cog):
     def __init__(self, bot):
-        self.bot = bot
+        self.bot = bot  
 
     @commands.command(name="wallet", aliases=["w"])
     async def wallet(self, ctx):
         user_id = ctx.author.id
         wallet = await get_wallet(user_id)
-        await ctx.send(f"Số tiền trong wallet của bạn là **{wallet}**<:cash:1151558754614116413>.")
+        wallet = int(round(wallet, 0))
+        format_wallet, format_text_wallet = await format_money(wallet)
+        await ctx.send(f"Số tiền trong wallet của bạn là **{format_wallet}**{'(**' + format_text_wallet + '**)' if format_text_wallet is not None else ''}<:cash:1151558754614116413>")
 
     @commands.command(name="coinflip", aliases=["cf", "CF"])
     async def coinflip(self, ctx, amount, *sides):

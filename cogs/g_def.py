@@ -3,6 +3,8 @@ import nextcord
 from nextcord.ext import commands
 import datetime
 import pytz
+import locale
+import humanize
 
 from config import hostname,password
 
@@ -10,6 +12,20 @@ intents = nextcord.Intents().all()
 intents.typing = True
 bot = commands.Bot(command_prefix=["!"], intents=intents)
 
+locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
+
+async def format_money(value):
+    value = float(value)
+    if value.is_integer():
+        x = "%.0f"
+    elif value.is_decimal():
+        x = "%.2f"
+    formatted_value = locale.format_string(x, value, grouping=True)
+    formatted_text_value = humanize.intword(value,x)
+    formatted_text_value = formatted_text_value.replace(" million", " triệu").replace(" billion", " tỷ")
+    if value < 100000:
+        formatted_text_value = None
+    return formatted_value, formatted_text_value
 
 # Define một hàm để lấy thời gian reset_daily
 async def get_reset_daily_time():
@@ -73,3 +89,11 @@ async def load_data(table, where, where_value, select):
         if main_connection:
             main_cursor.close()
             main_connection.close()
+            
+async def update_global_data(data, value_data, user_id):
+    main_connection = await connect_main_db() 
+    main_cursor = main_connection.cursor()
+    main_cursor.execute(f"UPDATE global_user_data SET {data} = %s WHERE db_g_user_id = %s", (value_data, user_id))
+    main_connection.commit()
+    main_cursor.close()
+    main_connection.close()
