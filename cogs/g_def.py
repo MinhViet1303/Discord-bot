@@ -5,8 +5,9 @@ import datetime
 import pytz
 import locale
 import humanize
+import re
 
-from config import hostname,password
+from config import hostname, port, password
 
 intents = nextcord.Intents().all()
 intents.typing = True
@@ -14,16 +15,17 @@ bot = commands.Bot(command_prefix=["!"], intents=intents)
 
 locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
 
-async def format_money(value):
+def format_money(value):
     value = float(value)
+    x = "%.2f"
     if value.is_integer():
         x = "%.0f"
-    elif value.is_decimal():
-        x = "%.2f"
     formatted_value = locale.format_string(x, value, grouping=True)
-    formatted_text_value = humanize.intword(value,x)
-    formatted_text_value = formatted_text_value.replace(" million", " triệu").replace(" billion", " tỷ")
-    if value < 100000:
+    formatted_text_value = humanize.intword(value)
+    if '.0' in formatted_text_value:
+        formatted_text_value = re.sub(r'\.0\b', '', formatted_text_value)
+    formatted_text_value = formatted_text_value.replace(" thousand", " nghìn").replace(" million", " triệu").replace(" billion", " tỷ").replace(" trillion", " nghìn tỷ")
+    if value < 10000:
         formatted_text_value = None
     return formatted_value, formatted_text_value
 
@@ -49,7 +51,7 @@ async def connect_db(db_name=None):
             host=hostname,
             user="root",
             password=password,
-            port=1300,
+            port=port,
             database=db_name
         ))
         if conn is None:
@@ -63,10 +65,10 @@ async def connect_db(db_name=None):
 async def connect_main_db():
     try:
         conn = await bot.loop.run_in_executor(None, lambda: mysql.connector.connect(
-            host="localhost",
+            host=hostname,
             user="root",
             password=password,
-            port=1300,
+            port=port,
             database="main"
         ))
         if conn is None:

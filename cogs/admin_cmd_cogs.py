@@ -53,6 +53,37 @@ class Admin_CMD(commands.Cog):
             cmd_window = gw.getWindowsWithTitle("auto_boots_discord_bot.bat")[1] 
             if cmd_window:
                 cmd_window.close()
+    
+    
+    @commands.command(name="shutdown", aliases = ["sd"])
+    @commands.is_owner() 
+    async def shutdown(self, ctx, action = None):
+        await ctx.send("Bot đang tắt...")
+        print("===========================")
+        print("Bot đang tắt...")
+        
+        self.bot.clear()
+        
+        await asyncio.sleep(3)
+        
+@commands.command(name="shutdown", aliases=["sd"])
+@commands.is_owner()
+async def shutdown(self, ctx, action=None):
+    await ctx.send("Bot đang tắt...")
+    print("===============")
+    print("Bot đang tắt...")
+    print("===============")
+
+    self.bot.clear()
+
+    await asyncio.sleep(3)
+
+    windows = gw.getWindowsWithTitle("auto_boots_discord_bot.bat")
+    if len(windows) > 1:
+        cmd_window = windows[1]
+        cmd_window.close()
+
+
 
 def setup(bot):
     bot.add_cog(Admin_CMD(bot))

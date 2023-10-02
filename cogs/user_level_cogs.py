@@ -1,14 +1,15 @@
+import nextcord
 from nextcord.ext import commands
 import random
-import asyncio
 import mysql.connector
 
 from cogs.g_def import connect_db, connect_main_db, update_global_data
 from cogs.luck_cogs import load_luck
 from cogs.gamebal_cogs import get_wallet
 
-random.seed()
+from make_image.level_img import make_level_img
 
+random.seed()
 
 async def calculate_exp_need(user_id, lv, luck, temp_luck):
     luck_buff = luck / 2
@@ -89,6 +90,10 @@ async def calculate_exp(lv, luck, temp_luck, exp_need):
         exp = limit_min * x
     elif exp > limit_max:
         exp = limit_max * x
+        
+    if lv > 5:
+        if random.random() > 0.7:
+            exp = -exp
     
     exp = round(exp, 2)
     
@@ -101,6 +106,10 @@ async def calculate_exp(lv, luck, temp_luck, exp_need):
 # Hàm tăng cấp người dùng
 async def level_up(message, user_id):
     display_name = message.author.nick if message.author.nick is not None else message.author.display_name
+    name_color = (message.author.top_role.color.r, message.author.top_role.color.g, message.author.top_role.color.b)
+    avatar_url = message.author.display_avatar
+    if avatar_url is None:
+        avatar_url = message.author.default_avatar
     main_connection = await connect_main_db()
     main_cursor = main_connection.cursor()
     
@@ -148,14 +157,20 @@ async def level_up(message, user_id):
             
             print(f"User {display_name} lv up{old_lv} => {lv}, nhận thưởng {reward}cash!")
             
-            # if message.channel.id != 879185402404143144:
+            await make_level_img(avatar_url, display_name, name_color, round(lv), round(exp), exp_need)
+            img = nextcord.File('make_image/level.png')
+            
+            if message.channel.id == 879185402404143144:
+                message.channel.id = 869576090123923456
+                
             await message.channel.send(f"Xin chào **{display_name}**, chúc mừng bạn đã lên level, level hiện tại của bạn là **{lv}**! \n"
                         f"Daily luck hôm nay của bạn là **{temp_luck}**\n"
                         f"Luck của bạn là **{luck}** \n"
                         f"\n"
                         f"Quà cơ bản của bạn là **{raw_reward}**<:cash:1151558754614116413> \n"
                         f"Bonus luck của bạn là **{round(bonus*100)}%**, bạn {'không nhận được bonus' if luck_bonus == 0 else '**nhận thêm**' if luck_bonus > 0 else '**mất**'} **{round(reward_bonus)}**<:cash:1151558754614116413> \n"
-                        f"Tổng cộng bạn nhận được **{reward}**<:cash:1151558754614116413> quà lên cấp! \n")
+                        f"Tổng cộng bạn nhận được **{reward}**<:cash:1151558754614116413> quà lên cấp! \n",
+                        file = img)
         
         main_cursor.execute('UPDATE global_user_data SET db_exp = %s, db_exp_need = %s, db_user_level = %s, db_wallet = %s WHERE db_g_user_id = %s', (exp, exp_need, lv, wallet, user_id))
         main_connection.commit()
@@ -172,8 +187,18 @@ class User_Levelling(commands.Cog):
         self.bot = bot
 
     @commands.command(name = "level", aliases = ["lv"])
-    async def level(self, ctx):
-        user_id =  ctx.author.id
+    async def level(self, ctx, member: nextcord.Member = None):
+        
+        if member is None:
+            member = ctx
+        
+        display_name = member.author.nick if member.author.nick is not None else member.author.display_name
+        name_color = (member.author.top_role.color.r, member.author.top_role.color.g, member.author.top_role.color.b)
+        avatar_url = member.author.display_avatar
+        if avatar_url is None:
+            avatar_url = member.author.default_avatar
+        
+        user_id =  member.author.id
         main_connection = await connect_main_db()
         main_cursor = main_connection.cursor()
         
@@ -184,10 +209,11 @@ class User_Levelling(commands.Cog):
         lv = user_data[1]
         exp_need = round(user_data[2])
         
-        await ctx.send(f"Level hiện tại của bạn là **{lv}**! \n"
-                        f"======================= \n"
-                        f"Exp/Exp_need: \n"
-                        f"**{exp}/{exp_need}({round((exp/exp_need)*100)}%)**")
+        await make_level_img(avatar_url, display_name, name_color, lv, exp, exp_need)
+        
+        img = nextcord.File('make_image/level.png')
+        
+        await ctx.send(file = img)
         
         if main_connection:
             main_cursor.close()

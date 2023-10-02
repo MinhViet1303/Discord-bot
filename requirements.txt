@@ -4,3 +4,7 @@
 nextcord
 mysql.connector
 pygetwindow
+pillow
+pytz
+humanize
+importlib
