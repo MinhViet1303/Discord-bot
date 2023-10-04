@@ -104,7 +104,8 @@ async def calculate_exp(lv, luck, temp_luck, exp_need):
 
 
 # Hàm tăng cấp người dùng
-async def level_up(message, user_id):
+async def level_up(message):
+    user_id = message.author.id
     display_name = message.author.nick if message.author.nick is not None else message.author.display_name
     name_color = (message.author.top_role.color.r, message.author.top_role.color.g, message.author.top_role.color.b)
     avatar_url = message.author.display_avatar
@@ -155,9 +156,9 @@ async def level_up(message, user_id):
             
             old_lv = lv - 1
             
-            print(f"User {display_name} lv up{old_lv} => {lv}, nhận thưởng {reward}cash!")
+            print(f"User {display_name} lv up {old_lv} => {lv}, nhận thưởng {reward} cash!")
             
-            await make_level_img(avatar_url, display_name, name_color, round(lv), round(exp), exp_need)
+            await make_level_img(avatar_url, display_name, name_color, lv, round(exp), round(exp_need))
             img = nextcord.File('make_image/level.png')
             
             if message.channel.id == 879185402404143144:
@@ -225,6 +226,8 @@ class User_Levelling(commands.Cog):
     async def on_message(self, message):
         if message.author.bot:
             return
+        
+        #* move to create_data_cogs
 
 def setup(bot):
     bot.add_cog(User_Levelling(bot))

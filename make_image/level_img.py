@@ -22,6 +22,7 @@ async def make_level_img(avt, user_name, name_color, lv, xp, xp_need):
     response = requests.get(avt, stream=True)
     
     avatar = Image.open(response.raw)
+    # avatar = Image.open("assets/level/avatar.png")    
     avatar = avatar.convert("RGBA")
     avatar = avatar.resize((300, 300))
     avatar = round_corners(avatar, 20, (0, 0, 0, 0))
@@ -61,11 +62,13 @@ async def make_level_img(avt, user_name, name_color, lv, xp, xp_need):
     level_number_y_position = level_y_position - 20
     draw.text((level_number_x_position, level_number_y_position), level_number, fill=number_color, font=int_font)
     
+    xp = 1 if xp == 0 else xp
     progress = xp / xp_need if xp_need > 0 else 0
     progress = 1 if progress > 1 else progress
     
     xp_bar = Image.open("assets/level/xp_bar.png")
     xp_bar_width = int(xp_bar.width * progress)
+    xp_bar_width = 1 if xp_bar_width < 1 else xp_bar_width
     xp_bar = xp_bar.resize((xp_bar_width,40))
     xp_bar_x_position = avatar_x_position + 330
     xp_bar_y_position = 210

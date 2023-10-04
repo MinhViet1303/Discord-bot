@@ -147,12 +147,12 @@ class Create_data(commands.Cog):
         if message.author.bot:
             return
         
-        user_id = str(message.author.id)
-        user_name = str(message.author.name)
+        user_id = message.author.id
+        user_name = message.author.name
         
         await create_main_db()
         await create_user_db(user_id, user_name)
-        await level_up(message, user_id)
+        await level_up(message)
 
 
 def setup(bot):

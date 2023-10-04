@@ -1,3 +1,4 @@
+import subprocess
 import mysql.connector
 import nextcord
 from nextcord.ext import commands
@@ -6,8 +7,9 @@ import pytz
 import locale
 import humanize
 import re
+import fileinput
 
-from config import hostname, port, password
+from config import ready_hostname, hostnames, port, password
 
 intents = nextcord.Intents().all()
 intents.typing = True
@@ -44,11 +46,69 @@ async def get_reset_daily_time():
     
     return now, reset_daily
 
+async def update_config(config, value):
+    file_to_edit = 'config.py'
+    for line in fileinput.input(file_to_edit, inplace=True):
+        if line.startswith(config):
+            # Thay đổi giá trị ready_hostname
+            if isinstance(value, str):
+                print(f'{config} = "{value}"')
+            else:
+                print(f'{config} = {value}')
+        else:
+            print(line, end='')
+
+async def test_connect():
+    test_connect = await connect_db()
+    test_main_connect = await connect_main_db()
+    
+    restart = 0
+    
+    if test_connect is not None:
+        print("=================")
+        print("✅Test connect")
+        print("✅Connect_db")
+        test_connect.close()
+    else: restart = 1
+    
+    if test_main_connect is not None:
+        print("✅Connect_main_db")
+        test_main_connect.close()
+    else: restart = 1
+    
+    if restart == 1:
+        print("Bot đang khởi động lại...🔄")
+        await update_config("is_restart", True)
+        subprocess.Popen(["python", "-Xfrozen_modules=off", "main.py"]).wait()
+
+# Hàm kiểm tra kết nối đến các hostname
+async def check_hostnames(db_name):
+    for hostname in hostnames:
+        try:
+            conn = await bot.loop.run_in_executor(None, lambda: mysql.connector.connect(
+                host=hostname,
+                user="root",
+                password=password,
+                port=port,
+                database=db_name
+            ))
+            if conn is not None:
+                await update_config("ready_hostname", hostname)
+                print(f"========================================")
+                print(f"✅Thành công kết nối mới tới {hostname}")
+                print(f"========================================")
+            
+        except mysql.connector.Error as err:
+            print(f"Lỗi khi kết nối đến database {hostname}: {err}")
+            print(f"========================================")
+            print(f"Tiếp tục lỗi, thử kết khác... 🔄")
+    return None
+
 # Hàm kết nối đến cơ sở dữ liệu MySQL
 async def connect_db(db_name=None):
     try:
         conn = await bot.loop.run_in_executor(None, lambda: mysql.connector.connect(
-            host=hostname,
+            host=ready_hostname,
             user="root",
             password=password,
             port=port,
@@ -59,13 +119,18 @@ async def connect_db(db_name=None):
         else:
             return conn
     except mysql.connector.Error as err:
-        print(f"Lỗi khi kết nối đến database: {err}")
+        print("==================")        
+        print("Connect_db: ❌🔄")
+        print(f"Connect_db gặp lỗi khi kết nối đến database: {err}")
+        print(f"Đang thử kết nối mới....")
+        await check_hostnames(db_name)
         return None
+
 
 async def connect_main_db():
     try:
         conn = await bot.loop.run_in_executor(None, lambda: mysql.connector.connect(
-            host=hostname,
+            host=ready_hostname,
             user="root",
             password=password,
             port=port,
@@ -76,26 +141,30 @@ async def connect_main_db():
         else:
             return conn
     except mysql.connector.Error as err:
-        print(f"Lỗi khi kết nối đến database: {err}")
+        print("Connect_main_db: ❌🔄")
+        print(f"Connect_main_db gặp lỗi khi kết nối đến database: {err}")
+        print(f"Đang thử kết nối mới....")
+        await check_hostnames("main")
         return None
 
+
 async def load_data(table, where, where_value, select):
-    main_connection = await connect_main_db()
-    main_cursor = main_connection.cursor()
+    test_connect = await connect_main_db()
+    main_cursor = test_connect.cursor()
     try:
         main_cursor.execute(f"SELECT {', '.join(select)} FROM {table} WHERE {where} = {where_value}")
         result = main_cursor.fetchone()
         
         return result
     finally:
-        if main_connection:
+        if test_connect:
             main_cursor.close()
-            main_connection.close()
+            test_connect.close()
             
 async def update_global_data(data, value_data, user_id):
-    main_connection = await connect_main_db() 
-    main_cursor = main_connection.cursor()
+    test_connect = await connect_main_db() 
+    main_cursor = test_connect.cursor()
     main_cursor.execute(f"UPDATE global_user_data SET {data} = %s WHERE db_g_user_id = %s", (value_data, user_id))
-    main_connection.commit()
+    test_connect.commit()
     main_cursor.close()
-    main_connection.close()
+    test_connect.close()
