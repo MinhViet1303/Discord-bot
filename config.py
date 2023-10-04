@@ -2,7 +2,7 @@ TOKEN = None
 hostname1 = "localhost"
 hostname2 = None
 hostname3 = None
-port = 1300
+port = None
 password = None
 
 hostnames = [hostname1,hostname2,hostname3]
